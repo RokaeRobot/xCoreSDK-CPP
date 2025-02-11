@@ -37,17 +37,30 @@ elseif(UNIX)
     endif()
 
     # set path to model library
-    set_target_properties(xmatemodel_lib PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/Linux/cpp/x86_64/libxMateModel.a)
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+        set_target_properties(xmatemodel_lib PROPERTIES
+            IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/Linux/cpp/x86_64/libxMateModel.a)
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+        message(STATUS "Skipping xmatemodel_lib for AArch64")
+    else()
+        message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
 
     set(XCORESDK_LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Linux/cpp/${CMAKE_SYSTEM_PROCESSOR})
     set_target_properties(${PROJECT_NAME}_lib PROPERTIES
         IMPORTED_LOCATION ${XCORESDK_LIBRARY_DIR}/lib${PROJECT_NAME}${SHARED_LIB_SUFFIX}.so.${CMAKE_PROJECT_VERSION}
         )
-    set_target_properties(${PROJECT_NAME}_static PROPERTIES
-        IMPORTED_LOCATION ${XCORESDK_LIBRARY_DIR}/lib${PROJECT_NAME}.a
-        INTERFACE_LINK_LIBRARIES xmatemodel_lib
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+        set_target_properties(${PROJECT_NAME}_static PROPERTIES
+            IMPORTED_LOCATION ${XCORESDK_LIBRARY_DIR}/lib${PROJECT_NAME}.a
+            INTERFACE_LINK_LIBRARIES xmatemodel_lib
         )
+    else()
+        set_target_properties(${PROJECT_NAME}_static PROPERTIES
+            IMPORTED_LOCATION ${XCORESDK_LIBRARY_DIR}/lib${PROJECT_NAME}.a
+        )
+    endif()
+    
 endif()
 
 if(XCORE_LINK_SHARED_LIBS)
